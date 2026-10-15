@@ -6,7 +6,7 @@
     "ui": {
       "id": "dev.delta.db",
       "name": "Delta Storage",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "contract": "^1.4.0",
       "publisher": "Delta",
       "description": "Unified storage with local files or PostgreSQL (TimescaleDB optional).",
@@ -313,5 +313,6 @@
       "params": {},
       "description": "Delete records belonging to the authenticated producer"
     }
-  ]
+  ],
+  "version": "0.3.1"
 }
