@@ -64,3 +64,8 @@ npm start
 Node 22.12+, supervisor-provided `DELTA_URL` / `DELTA_TOKEN`, optional `STORAGE_COMPONENT` (default `storage`), `DATA_DIR` and `DATABASE_URL`. Configuration and data files are private; do not commit them. The manifest includes English and Russian presentation metadata; technical IDs stay language-independent.
 
 Licensed under [Apache 2.0](LICENSE). PostgreSQL, TimescaleDB and npm dependencies retain their respective licenses; the Apache license here does not relicense those products.
+
+
+### Console status contract
+
+The manifest declares generic status/settings endpoints. `storage.status` returns only sanitized settings (`engine` and a boolean connection-configured marker); database credentials never leave the plugin. `storage.settings` without `values` reads the same safe settings; writes remain administrative. The web console no longer needs storage-specific setting logic.
