@@ -1,13 +1,13 @@
 {
   "id": "storage",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Unified replaceable storage transport",
   "metadata": {
     "storageContract": "1.0.0",
     "ui": {
       "id": "dev.delta.db",
       "name": "Delta Storage",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "contract": "^1.4.0",
       "publisher": "Delta",
       "description": "Unified storage with local files or PostgreSQL + TimescaleDB.",
@@ -22,7 +22,9 @@
       },
       "metrics": [],
       "capabilities": [
-        "storage.local"
+        "storage.local",
+        "settings.read",
+        "status.read"
       ],
       "repository": "https://github.com/n-ycta/delta_db",
       "defaultLocale": "en",
@@ -170,7 +172,11 @@
           "label": "I understand that switching engines does not migrate existing data",
           "default": false
         }
-      ]
+      ],
+      "endpoints": {
+        "status": "storage.status",
+        "settings": "storage.settings"
+      }
     }
   },
   "capabilities": [
@@ -207,6 +213,12 @@
         },
         "limit": {
           "type": "integer"
+        }
+      },
+      "description": "Query stored metrics",
+      "localizations": {
+        "ru": {
+          "description": "Запросить сохранённые метрики"
         }
       }
     },
@@ -264,17 +276,33 @@
     },
     {
       "name": "health",
-      "params": {}
+      "params": {},
+      "description": "Storage health",
+      "localizations": {
+        "ru": {
+          "description": "Состояние хранилища"
+        }
+      }
     },
     {
       "name": "settings",
       "params": {
         "values": {
           "type": "object",
-          "required": true
+          "required": false
         }
       },
       "admin": true
+    },
+    {
+      "name": "status",
+      "params": {},
+      "description": "Storage status and sanitized settings",
+      "localizations": {
+        "ru": {
+          "description": "Состояние хранилища и безопасные настройки"
+        }
+      }
     }
   ]
 }
