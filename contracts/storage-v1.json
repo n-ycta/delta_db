@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "component": "storage (configurable alias)",
+  "capabilities": [
+    "storage.write",
+    "storage.query",
+    "storage.document_put",
+    "storage.document_get",
+    "storage.document_list",
+    "storage.document_delete",
+    "storage.health"
+  ],
+  "record": {
+    "id": "uuid (stable for retry deduplication)",
+    "time": "unix milliseconds",
+    "source": "plugin id",
+    "node": "node id",
+    "metric": "metric id",
+    "value": "finite number or null",
+    "dimensions": "string map",
+    "payload": "JSON object"
+  },
+  "query": {
+    "source": "required",
+    "metric": "required",
+    "from": "unix milliseconds inclusive",
+    "to": "unix milliseconds exclusive",
+    "filters": "dimension -> array of strings",
+    "limit": "1..10000"
+  },
+  "documents": "namespace + key + JSON object; namespace separated, private to owner by default"
+}

@@ -1,0 +1,59 @@
+{
+  "id": "storage",
+  "version": "0.1.0",
+  "description": "Unified replaceable storage transport",
+  "metadata": {
+    "storageContract": "1.0.0",
+    "ui": {
+      "id": "dev.delta.db",
+      "name": "PostgreSQL + TimescaleDB",
+      "version": "0.1.0",
+      "contract": "^1.4.0",
+      "publisher": "Delta",
+      "description": "Единое хранилище метрик, событий и документов",
+      "icon": "database",
+      "category": "system",
+      "runtime": {
+        "targets": [
+          "vps",
+          "desktop",
+          "container"
+        ]
+      },
+      "metrics": [],
+      "capabilities": [
+        "storage.local"
+      ]
+    }
+  },
+  "capabilities": [
+    {
+      "name": "write",
+      "params": {}
+    },
+    {
+      "name": "query",
+      "params": {}
+    },
+    {
+      "name": "document_put",
+      "params": {}
+    },
+    {
+      "name": "document_get",
+      "params": {}
+    },
+    {
+      "name": "document_list",
+      "params": {}
+    },
+    {
+      "name": "document_delete",
+      "params": {}
+    },
+    {
+      "name": "health",
+      "params": {}
+    }
+  ]
+}
