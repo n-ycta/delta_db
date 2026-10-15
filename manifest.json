@@ -1,16 +1,15 @@
 {
   "id": "storage",
-  "version": "0.2.2",
   "description": "Unified replaceable storage transport",
   "metadata": {
-    "storageContract": "1.0.0",
+    "storageContract": "1.1.0",
     "ui": {
       "id": "dev.delta.db",
       "name": "Delta Storage",
-      "version": "0.2.2",
+      "version": "0.3.0",
       "contract": "^1.4.0",
       "publisher": "Delta",
-      "description": "Unified storage with local files or PostgreSQL + TimescaleDB.",
+      "description": "Unified storage with local files or PostgreSQL (TimescaleDB optional).",
       "icon": "database",
       "category": "system",
       "runtime": {
@@ -38,7 +37,7 @@
         "en": {
           "name": "Delta Storage",
           "publisher": "Delta",
-          "description": "Unified storage with local files or PostgreSQL + TimescaleDB.",
+          "description": "Unified storage with local files or PostgreSQL (TimescaleDB optional).",
           "icon": "database",
           "category": "system",
           "metrics": [],
@@ -67,7 +66,7 @@
                 },
                 {
                   "value": "postgres",
-                  "label": "PostgreSQL + TimescaleDB"
+                  "label": "PostgreSQL (TimescaleDB optional)"
                 }
               ]
             },
@@ -88,7 +87,7 @@
         "ru": {
           "name": "Delta Storage",
           "publisher": "Delta",
-          "description": "Единое хранилище: локальные файлы или PostgreSQL + TimescaleDB.",
+          "description": "Единое хранилище: локальные файлы или PostgreSQL (TimescaleDB необязателен).",
           "icon": "database",
           "category": "system",
           "metrics": [],
@@ -115,7 +114,7 @@
                 },
                 {
                   "value": "postgres",
-                  "label": "PostgreSQL + TimescaleDB"
+                  "label": "PostgreSQL (TimescaleDB необязателен)"
                 }
               ]
             },
@@ -156,7 +155,7 @@
             },
             {
               "value": "postgres",
-              "label": "PostgreSQL + TimescaleDB"
+              "label": "PostgreSQL (TimescaleDB optional)"
             }
           ]
         },
@@ -303,6 +302,16 @@
           "description": "Состояние хранилища и безопасные настройки"
         }
       }
+    },
+    {
+      "name": "aggregate",
+      "params": {},
+      "description": "Aggregate producer-defined records by dimensions and time buckets"
+    },
+    {
+      "name": "delete",
+      "params": {},
+      "description": "Delete records belonging to the authenticated producer"
     }
   ]
 }

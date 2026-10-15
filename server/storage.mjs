@@ -1,3 +1,4 @@
+import {AggregateQuery,DeleteQuery,aggregateSql,sqlWhere} from './analytics.mjs';
 import {checkProducer} from './file.mjs';
 import {Batch,Query,Document} from './schema.mjs';
 import {DeltaError} from './delta-sdk.mjs';
@@ -6,7 +7,9 @@ export function storageHandlers(pool,id='storage') {
  const owner=c=>`${c.kind}:${c.peer_id || ''}:${c.name}`;
  const doc=(args,c)=>({...validated(Document,args),owner:owner(c)});
  return {
-  [`${id}.health`]: async()=>{await pool.query('SELECT 1'); return {status:'ok',contract:'1.0.0',engine:'PostgreSQL/TimescaleDB'}},
+  [`${id}.aggregate`]:async a=>aggregateSql(pool,validated(AggregateQuery,a)),
+  [`${id}.delete`]:async(a,c)=>{const q=validated(DeleteQuery,a);checkProducer([{source:q.source,node:q.filters?.node?.[0]}],c);const params=[],where=sqlWhere(q,params);const r=await pool.query('DELETE FROM delta_records WHERE '+where,params);return {deleted:r.rowCount}},
+  [`${id}.health`]: async()=>{await pool.query('SELECT 1'); return {status:'ok',contract:'1.1.0',engine:'postgres'}},
   [`${id}.write`]:async(args,caller)=>{
    const {records}=validated(Batch,args);const client=await pool.connect();let inserted=0;
    try {await client.query('BEGIN');for(const r of records){
