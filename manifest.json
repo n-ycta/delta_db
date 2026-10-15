@@ -6,7 +6,7 @@
     "ui": {
       "id": "dev.delta.db",
       "name": "Delta Storage",
-      "version": "0.3.1",
+      "version": "0.4.0",
       "contract": "^1.4.0",
       "publisher": "Delta",
       "description": "Unified storage with local files or PostgreSQL (TimescaleDB optional).",
@@ -21,9 +21,10 @@
       },
       "metrics": [],
       "capabilities": [
+        "actions",
         "storage.local",
-        "settings.read",
-        "status.read"
+        "status.read",
+        "settings.read"
       ],
       "repository": "https://github.com/n-ycta/delta_db",
       "defaultLocale": "en",
@@ -58,29 +59,50 @@
               "key": "engine",
               "type": "select",
               "label": "Storage engine",
-              "default": "file",
+              "default": "postgres",
               "options": [
                 {
-                  "value": "file",
-                  "label": "Local files (quick start)"
+                  "value": "postgres",
+                  "label": "PostgreSQL + TimescaleDB (automatic)"
                 },
                 {
-                  "value": "postgres",
-                  "label": "PostgreSQL (TimescaleDB optional)"
+                  "value": "file",
+                  "label": "Local files"
                 }
               ]
             },
             {
+              "key": "useManagedPostgres",
+              "type": "boolean",
+              "default": true,
+              "label": "Manage local PostgreSQL automatically",
+              "help": "Uses an isolated loopback-only container and private credentials. Requires rootless Podman or Docker on this node."
+            },
+            {
               "key": "databaseUrl",
               "type": "secret",
-              "label": "PostgreSQL connection URL",
-              "help": "Stored privately on this node. Leave blank to retain the current connection."
+              "label": "External PostgreSQL URL (optional)",
+              "help": "Only for your own server. Turn off automatic management to use it. Blank retains the current connection."
             },
             {
               "key": "confirmBackendChange",
               "type": "boolean",
-              "label": "I understand that switching engines does not migrate existing data",
-              "default": false
+              "default": false,
+              "label": "Copy and verify data before switching storage",
+              "help": "Existing destination data is backed up before replacement. The source is retained. Do not stop the node during migration. Files support up to 100,000 records."
+            }
+          ],
+          "actions": [
+            {
+              "id": "retry_backend",
+              "label": "Retry database setup",
+              "description": "Retry the last authorized setup or migration; no source data is deleted."
+            },
+            {
+              "id": "prepare_runtime",
+              "label": "Prepare database runtime",
+              "description": "Linux: approve the native administrator prompt to install rootless Podman and dependencies from your distribution repositories and assign this user an unused subordinate UID/GID range. No root web service or docker-group access is added. Windows: install and start Docker Desktop; OS/WSL setup may require a restart.",
+              "dangerous": true
             }
           ]
         },
@@ -109,23 +131,42 @@
               "label": "Движок хранения",
               "options": [
                 {
-                  "value": "file",
-                  "label": "Локальные файлы"
+                  "value": "postgres",
+                  "label": "PostgreSQL + TimescaleDB (автоматически)"
                 },
                 {
-                  "value": "postgres",
-                  "label": "PostgreSQL (TimescaleDB необязателен)"
+                  "value": "file",
+                  "label": "Локальные файлы"
                 }
               ]
             },
             {
+              "key": "useManagedPostgres",
+              "label": "Автоматически управлять локальным PostgreSQL",
+              "help": "Изолированный контейнер, доступ только с этого узла, приватный пароль. Нужен Podman без root или Docker."
+            },
+            {
               "key": "databaseUrl",
-              "label": "Строка подключения PostgreSQL",
-              "help": "Хранится приватно на узле. Оставьте пустым, чтобы сохранить текущее подключение."
+              "label": "Внешний PostgreSQL (необязательно)",
+              "help": "Только для собственного сервера. Выключите автоматическое управление. Пустое поле сохраняет текущее подключение."
             },
             {
               "key": "confirmBackendChange",
-              "label": "Я понимаю, что смена движка не переносит существующие данные"
+              "label": "Скопировать и проверить данные перед переключением",
+              "help": "Данные целевого хранилища сохраняются в резервной копии перед заменой. Исходное хранилище остаётся. Не выключайте узел во время переноса. Файлы вмещают до 100 000 записей."
+            }
+          ],
+          "actions": [
+            {
+              "id": "retry_backend",
+              "label": "Повторить настройку БД",
+              "description": "Повторить последнюю подтверждённую настройку или перенос. Исходные данные не удаляются."
+            },
+            {
+              "id": "prepare_runtime",
+              "label": "Подготовить среду БД",
+              "description": "Linux: подтвердите системный запрос администратора для установки Podman без root и зависимостей из репозиториев дистрибутива. Пользователю выделяется свободный диапазон дополнительных UID/GID. Веб не получает root или доступ к группе docker. Windows: установите и запустите Docker Desktop; настройка ОС/WSL может потребовать перезагрузки.",
+              "dangerous": true
             }
           ]
         }
@@ -147,35 +188,56 @@
           "key": "engine",
           "type": "select",
           "label": "Storage engine",
-          "default": "file",
+          "default": "postgres",
           "options": [
             {
-              "value": "file",
-              "label": "Local files (quick start)"
+              "value": "postgres",
+              "label": "PostgreSQL + TimescaleDB (automatic)"
             },
             {
-              "value": "postgres",
-              "label": "PostgreSQL (TimescaleDB optional)"
+              "value": "file",
+              "label": "Local files"
             }
           ]
         },
         {
+          "key": "useManagedPostgres",
+          "type": "boolean",
+          "default": true,
+          "label": "Manage local PostgreSQL automatically",
+          "help": "Uses an isolated loopback-only container and private credentials. Requires rootless Podman or Docker on this node."
+        },
+        {
           "key": "databaseUrl",
           "type": "secret",
-          "label": "PostgreSQL connection URL",
-          "help": "Stored privately on this node. Leave blank to retain the current connection."
+          "label": "External PostgreSQL URL (optional)",
+          "help": "Only for your own server. Turn off automatic management to use it. Blank retains the current connection."
         },
         {
           "key": "confirmBackendChange",
           "type": "boolean",
-          "label": "I understand that switching engines does not migrate existing data",
-          "default": false
+          "default": false,
+          "label": "Copy and verify data before switching storage",
+          "help": "Existing destination data is backed up before replacement. The source is retained. Do not stop the node during migration. Files support up to 100,000 records."
         }
       ],
       "endpoints": {
         "status": "storage.status",
         "settings": "storage.settings"
-      }
+      },
+      "actions": [
+        {
+          "id": "retry_backend",
+          "label": "Retry database setup",
+          "description": "Retry the last authorized setup or migration; no source data is deleted."
+        },
+        {
+          "id": "prepare_runtime",
+          "label": "Prepare database runtime",
+          "description": "Linux: approve the native administrator prompt to install rootless Podman and dependencies from your distribution repositories and assign this user an unused subordinate UID/GID range. No root web service or docker-group access is added. Windows: install and start Docker Desktop; OS/WSL setup may require a restart.",
+          "dangerous": true
+        }
+      ]
     }
   },
   "capabilities": [
@@ -312,7 +374,17 @@
       "name": "delete",
       "params": {},
       "description": "Delete records belonging to the authenticated producer"
+    },
+    {
+      "name": "retry_backend",
+      "params": {},
+      "admin": true
+    },
+    {
+      "name": "prepare_runtime",
+      "params": {},
+      "admin": true
     }
   ],
-  "version": "0.3.1"
+  "version": "0.4.0"
 }

@@ -20,7 +20,7 @@ export function storageHandlers(pool,id='storage') {
   },
   [`${id}.query`]:async args=>{
    const q=validated(Query,args),params=[q.source,q.metric,q.from,q.to];let where='source=$1 AND metric=$2 AND time>=to_timestamp($3/1000.0) AND time<to_timestamp($4/1000.0)';
-   for(const [key,values] of Object.entries(q.filters||{})){params.push(key,values);where+=` AND dimensions->>$${params.length-1}=ANY($${params.length}::text[])`}
+   for(const [key,values] of Object.entries(q.filters||{})){if(!values.length)continue;params.push(key,values);where+=` AND dimensions->>$${params.length-1}=ANY($${params.length}::text[])`}
    params.push(q.limit+1);const {rows}=await pool.query(`SELECT id,(extract(epoch FROM time)*1000)::double precision AS time,source,node,metric,value,dimensions,payload FROM delta_records WHERE ${where} ORDER BY time,id LIMIT $${params.length}`,params);
    return {records:rows.slice(0,q.limit),truncated:rows.length>q.limit};
   },

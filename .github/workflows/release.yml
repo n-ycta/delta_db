@@ -26,6 +26,8 @@ jobs:
           node-version: '24'
       - run: npm ci
       - run: npm test
+        env:
+          TEST_MANAGED_POSTGRES: '1'
       - run: tar --exclude='server/launch.mjs' -czf delta_db.tar.gz manifest.json package.json package-lock.json server LICENSE NOTICE migrations
       - run: sha256sum delta_db.tar.gz > SHA256SUMS
       - env:
