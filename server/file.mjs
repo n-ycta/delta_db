@@ -1,3 +1,4 @@
+import {AggregateQuery,DeleteQuery,aggregateRows,matches} from './analytics.mjs';
 import {readFile,mkdir,writeFile,rename} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {Batch,Query,Document} from './schema.mjs';
@@ -13,9 +14,11 @@ export async function fileHandlers(file,id='storage'){
  const owner=c=>JSON.stringify([c.kind,c.peer_id||'',c.name]);
  const doc=(a,c)=>{const d=parse(Document,a);return {...d,id:JSON.stringify([owner(c),d.namespace,d.key])};};
  return {
- [`${id}.health`]:async()=>({status:'ok',contract:'1.0.0',engine:'file',records:state.records.length,capacity:100000}),
+ [`${id}.aggregate`]:async a=>aggregateRows(state.records,parse(AggregateQuery,a)),
+ [`${id}.delete`]:async(a,c)=>{const q=parse(DeleteQuery,a);checkProducer([{source:q.source,node:q.filters?.node?.[0]}],c);return mutate(s=>{const before=s.records.length;s.records=s.records.filter(r=>!matches(r,q));return {deleted:before-s.records.length}})},
+ [`${id}.health`]:async()=>({status:'ok',contract:'1.1.0',engine:'file',records:state.records.length,capacity:100000}),
  [`${id}.write`]:async(a,c)=>{const {records}=parse(Batch,a);checkProducer(records,c);return mutate(s=>{const keys=new Set(s.records.map(r=>r.time+':'+r.id));let inserted=0;for(const r of records)if(!keys.has(r.time+':'+r.id)){s.records.push(r);keys.add(r.time+':'+r.id);inserted++;}if(s.records.length>100000)throw new DeltaError('conflict','File storage capacity reached; configure PostgreSQL');return {accepted:records.length,inserted};});},
- [`${id}.query`]:async a=>{const q=parse(Query,a),rows=state.records.filter(r=>r.source===q.source&&r.metric===q.metric&&r.time>=q.from&&r.time<q.to&&Object.entries(q.filters||{}).every(([k,v])=>v.includes(r.dimensions[k]))).sort((a,b)=>a.time-b.time||a.id.localeCompare(b.id));return {records:rows.slice(0,q.limit),truncated:rows.length>q.limit};},
+ [`${id}.query`]:async a=>{const q=parse(Query,a),rows=state.records.filter(r=>r.source===q.source&&r.metric===q.metric&&r.time>=q.from&&r.time<q.to&&Object.entries(q.filters||{}).every(([k,v])=>!v.length||v.includes(r.dimensions[k]))).sort((a,b)=>a.time-b.time||a.id.localeCompare(b.id));return {records:rows.slice(0,q.limit),truncated:rows.length>q.limit};},
  [`${id}.document_put`]:async(a,c)=>{const d=doc(a,c);if(!d.value)throw new DeltaError('bad_request','value required');if(Buffer.byteLength(JSON.stringify(d.value))>1048576)throw new DeltaError('bad_request','Document too large');return mutate(s=>{s.documents[d.id]={namespace:d.namespace,key:d.key,owner:owner(c),value:d.value};return d.value;});},
  [`${id}.document_get`]:async(a,c)=>state.documents[doc(a,c).id]?.value??null,
  [`${id}.document_list`]:async(a,c)=>{const d=doc({...a,key:'list'},c);return Object.values(state.documents).filter(v=>v.owner===owner(c)&&v.namespace===d.namespace).sort((a,b)=>a.key.localeCompare(b.key)).slice(0,1000).map(({key,value})=>({key,value}));},

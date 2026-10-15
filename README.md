@@ -24,9 +24,9 @@ This installs a node + storage. To also get the console, use the [Delta default 
 
 Default when no PostgreSQL configuration exists. Atomic private JSON writes, serialized transactions, `(time,id)` deduplication, identical query/document interface. Limit: **100,000 records**; intended for a small personal deployment, not a replacement for a database server. Capacity failure is explicit; records are never silently discarded. Back up the storage data directory.
 
-### PostgreSQL + TimescaleDB — larger time-series workloads
+### PostgreSQL — larger workloads (TimescaleDB optional)
 
-Provide a PostgreSQL server with TimescaleDB enabled. The plugin applies `migrations/001_storage.sql` at startup. It creates hypertables/indexes and isolates document ownership by the authenticated caller.
+Provide a standard PostgreSQL 15+ server. No TimescaleDB extension or superuser role is required. The plugin applies idempotent tables/indexes from `migrations/001_storage.sql`; existing Timescale hypertables remain compatible. Documents are isolated by the authenticated caller.
 
 In the web console open **Plugins → Delta Storage → Settings**, choose PostgreSQL and supply a connection URL. Confirm the warning: changing backends **does not migrate data**. The candidate connection/migration must succeed before the active backend changes. The URL is written only to the node's private storage directory and is not returned in settings responses. `DATABASE_URL` is also supported for initial deployment.
 
@@ -69,3 +69,11 @@ Licensed under [Apache 2.0](LICENSE). PostgreSQL, TimescaleDB and npm dependenci
 ### Console status contract
 
 The manifest declares generic status/settings endpoints. `storage.status` returns only sanitized settings (`engine` and a boolean connection-configured marker); database credentials never leave the plugin. `storage.settings` without `values` reads the same safe settings; writes remain administrative. The web console no longer needs storage-specific setting logic.
+
+## Storage contract 1.1
+
+`<component>.aggregate` groups records by declared dimension names, optional epoch-aligned time buckets and sum/avg/min/max/count/last/weighted_avg. All PostgreSQL identifiers/JSON paths supplied by a caller are parameter-bound. Weighted averages use a positive numeric payload weight and ignore null measurements. Empty filters mean no restriction. Results include `truncated`; producers must not present partial results as complete.
+
+`<component>.delete` accepts the same source/metric/time/filter scope as query. Non-admin producers can only delete their own source; authenticated peers are additionally node-bound. Type owns its session/word schemas and retention, not Storage.
+
+Test standard PostgreSQL with `TEST_DATABASE_URL=postgres://... npm test`; release CI uses PostgreSQL 16 without TimescaleDB.
