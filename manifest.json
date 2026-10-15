@@ -1,13 +1,13 @@
 {
   "id": "storage",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Unified replaceable storage transport",
   "metadata": {
     "storageContract": "1.0.0",
     "ui": {
       "id": "dev.delta.db",
       "name": "Delta Storage",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "contract": "^1.4.0",
       "publisher": "Delta",
       "description": "Unified storage with local files or PostgreSQL + TimescaleDB.",
@@ -176,27 +176,91 @@
   "capabilities": [
     {
       "name": "write",
-      "params": {}
+      "params": {
+        "records": {
+          "type": "array",
+          "required": true
+        }
+      }
     },
     {
       "name": "query",
-      "params": {}
+      "params": {
+        "source": {
+          "type": "string",
+          "required": true
+        },
+        "metric": {
+          "type": "string",
+          "required": true
+        },
+        "from": {
+          "type": "number",
+          "required": true
+        },
+        "to": {
+          "type": "number",
+          "required": true
+        },
+        "filters": {
+          "type": "object"
+        },
+        "limit": {
+          "type": "integer"
+        }
+      }
     },
     {
       "name": "document_put",
-      "params": {}
+      "params": {
+        "namespace": {
+          "type": "string",
+          "required": true
+        },
+        "key": {
+          "type": "string",
+          "required": true
+        },
+        "value": {
+          "type": "object",
+          "required": true
+        }
+      }
     },
     {
       "name": "document_get",
-      "params": {}
+      "params": {
+        "namespace": {
+          "type": "string",
+          "required": true
+        },
+        "key": {
+          "type": "string",
+          "required": true
+        }
+      }
     },
     {
       "name": "document_list",
-      "params": {}
+      "params": {
+        "namespace": {
+          "type": "string",
+          "required": true
+        }
+      }
     },
     {
       "name": "document_delete",
-      "params": {}
+      "params": {
+        "namespace": {
+          "type": "string",
+          "required": true
+        },
+        "key": {
+          "type": "string",
+          "required": true
+        }
+      }
     },
     {
       "name": "health",
