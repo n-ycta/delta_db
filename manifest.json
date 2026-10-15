@@ -26,7 +26,12 @@
       ],
       "repository": "https://github.com/n-ycta/delta_db",
       "defaultLocale": "en",
-      "screenshots": [],
+      "screenshots": [
+        {
+          "url": "https://raw.githubusercontent.com/n-ycta/delta/main/docs/images/storage-settings.png",
+          "alt": "Storage backend settings"
+        }
+      ],
       "localizations": {
         "en": {
           "name": "Delta Storage",
