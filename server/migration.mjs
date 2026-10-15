@@ -1,3 +1,4 @@
+import {privateDirectory} from './private-files.mjs';
 import {readFile,writeFile,mkdir,rename,chmod} from 'node:fs/promises';import {join} from 'node:path';import {createHash,randomUUID} from 'node:crypto';
 const canonical=v=>v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canonical).join(',')+']':'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}';
 export function canonicalOwner(owner){let a;try{a=JSON.parse(owner)}catch{const first=owner.indexOf(':'),second=owner.indexOf(':',first+1);if(first<0||second<0)throw Error('invalid_document_owner');a=[owner.slice(0,first),owner.slice(first+1,second),owner.slice(second+1)]}if(!Array.isArray(a)||a.length!==3||a.some(x=>typeof x!=='string'))throw Error('invalid_document_owner');return JSON.stringify(a)}
@@ -8,7 +9,7 @@ export async function snapshot(backend){
  if(backend.engine==='file'){let s;try{s=JSON.parse(await readFile(backend.file,'utf8'))}catch(e){if(e.code!=='ENOENT')throw e;s={records:[],documents:{}}}return normalized({records:s.records,documents:Object.values(s.documents)})}
  const c=await backend.pool.connect();try{await c.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');const r=await c.query('SELECT id,round(extract(epoch FROM time)*1000)::double precision AS time,source,node,metric,value,dimensions,payload FROM delta_records ORDER BY time,id');const d=await c.query('SELECT namespace,key,owner,value FROM delta_documents ORDER BY namespace,key,owner');await c.query('COMMIT');return normalized({records:r.rows,documents:d.rows});}catch(e){await c.query('ROLLBACK').catch(()=>{});throw e}finally{c.release()}
 }
-async function backup(dir,name,data){await mkdir(dir,{recursive:true,mode:0o700});await chmod(dir,0o700);const id=Date.now()+'-'+randomUUID()+'-'+name+'.json';await writeFile(join(dir,id),JSON.stringify(data),{mode:0o600,flag:'wx'});return id}
+async function backup(dir,name,data){await privateDirectory(dir);const id=Date.now()+'-'+randomUUID()+'-'+name+'.json';await writeFile(join(dir,id),JSON.stringify(data),{mode:0o600,flag:'wx'});return id}
 const fileState=s=>({records:s.records,documents:Object.fromEntries(s.documents.map(d=>[JSON.stringify([canonicalOwner(d.owner),d.namespace,d.key]),{...d,owner:canonicalOwner(d.owner)}]))});
 export async function copyVerified(source,target,backupDir,onProgress=()=>{}){
  onProgress('snapshot');const data=await snapshot(source),before=await snapshot(target),expected=digest(data);if(target.engine==='file'&&data.records.length>100000)throw Object.assign(Error('file_capacity'),{code:'file_capacity'});

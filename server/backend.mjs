@@ -1,10 +1,11 @@
+import {privateDirectory} from './private-files.mjs';
 import pg from 'pg';
 import {readFile,writeFile,mkdir,rename,access} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {storageHandlers} from './storage.mjs';import {fileHandlers} from './file.mjs';import {copyVerified} from './migration.mjs';import {ManagedPostgres} from './managed-postgres.mjs';import {DeltaError} from './delta-sdk.mjs';import {message} from './messages.mjs';
 export class BackendManager {
  constructor(dir,id,{managed=new ManagedPostgres(dir),openBackend}={}){this.dir=dir;this.id=id;this.managed=managed;this.openBackend=openBackend||this.open.bind(this);this.configFile=resolve(dir,'backend.json');this.backend=null;this.job={state:'starting'};this.active=0;this.changing=false;this.pending=null;}
- async init(){await mkdir(this.dir,{recursive:true,mode:0o700});try{this.config=JSON.parse(await readFile(this.configFile,'utf8'))}catch(e){if(e.code!=='ENOENT')throw e;let existing=false;try{await access(resolve(this.dir,'storage.json'));existing=true}catch{}this.config={engine:process.env.DATABASE_URL?'postgres':existing?'file':'postgres',databaseUrl:process.env.DATABASE_URL||''}}return this}
+ async init(){await privateDirectory(this.dir);try{this.config=JSON.parse(await readFile(this.configFile,'utf8'))}catch(e){if(e.code!=='ENOENT')throw e;let existing=false;try{await access(resolve(this.dir,'storage.json'));existing=true}catch{}this.config={engine:process.env.DATABASE_URL?'postgres':existing?'file':'postgres',databaseUrl:process.env.DATABASE_URL||''}}return this}
  async open(config){
   if(config.engine==='file'){const file=resolve(this.dir,'storage.json');return {engine:'file',file,handlers:await fileHandlers(file,this.id),close:async()=>{}}}
   if(config.engine!=='postgres')throw Object.assign(Error('engine'),{code:'engine'});

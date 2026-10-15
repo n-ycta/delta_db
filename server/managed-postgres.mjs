@@ -1,3 +1,4 @@
+import {privateDirectory} from './private-files.mjs';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {readFile,writeFile,mkdir,chmod} from 'node:fs/promises';
@@ -11,7 +12,7 @@ export class ManagedPostgres {
  constructor(dir,{execute=run}={}){this.dir=resolve(dir,'postgres');this.execute=execute;const id=createHash('sha256').update(resolve(dir)).digest('hex').slice(0,16);this.name='delta-db-'+id;this.volume=this.name+'-data';this.state={state:'idle'};}
  async engine(){let saved;try{saved=JSON.parse(await readFile(join(this.dir,'runtime.json'),'utf8')).engine}catch(e){if(e.code!=='ENOENT')throw e}if(saved){if(!['podman','docker'].includes(saved))throw new ManagedError('managed_container_conflict');try{await this.execute(saved,['info','--format','json'],{timeout:10000});return saved}catch{throw new ManagedError('container_engine_required')}}for(const engine of ['podman','docker'])try{await this.execute(engine,['info','--format','json'],{timeout:10000});return engine}catch{}throw new ManagedError('container_engine_required')}
  async ensure(){
-  this.state={state:'starting'};await mkdir(this.dir,{recursive:true,mode:0o700});await chmod(this.dir,0o700);const engine=await this.engine();await writeFile(join(this.dir,'runtime.json'),JSON.stringify({engine}),{mode:0o600});
+  this.state={state:'starting'};await privateDirectory(this.dir);const engine=await this.engine();await writeFile(join(this.dir,'runtime.json'),JSON.stringify({engine}),{mode:0o600});
   const credential=join(this.dir,'credentials.json');let auth;
   try{auth=JSON.parse(await readFile(credential,'utf8'))}catch(e){if(e.code!=='ENOENT')throw e;auth={password:randomBytes(32).toString('hex')};await writeFile(credential,JSON.stringify(auth),{mode:0o600,flag:'wx'})}
   if(!/^[a-f0-9]{64}$/.test(auth.password))throw new ManagedError('managed_credentials_invalid');await chmod(credential,0o600);
