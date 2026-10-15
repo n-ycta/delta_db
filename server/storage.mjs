@@ -1,3 +1,4 @@
+import {checkProducer} from './file.mjs';
 import {Batch,Query,Document} from './schema.mjs';
 import {DeltaError} from './delta-sdk.mjs';
 const validated=(schema,args)=>{const r=schema.safeParse(args);if(!r.success)throw new DeltaError('bad_request',r.error.issues.map(i=>`${i.path.join('.')}: ${i.message}`).join('; '));return r.data};
@@ -10,7 +11,7 @@ export function storageHandlers(pool,id='storage') {
    const {records}=validated(Batch,args);const client=await pool.connect();let inserted=0;
    try {await client.query('BEGIN');for(const r of records){
     // Bind a write credential to its producer name unless it has explicit admin authority.
-    if (!caller.scopes?.includes('admin') && r.source!==caller.name) throw new DeltaError('forbidden','Record source must equal producer token name');
+    checkProducer([r],caller);
     const result=await client.query(`INSERT INTO delta_records(time,id,source,node,metric,value,dimensions,payload) VALUES(to_timestamp($1/1000.0),$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(time,id) DO NOTHING`,[r.time,r.id,r.source,r.node,r.metric,r.value,JSON.stringify(r.dimensions),JSON.stringify(r.payload)]);inserted+=result.rowCount;
    }await client.query('COMMIT');return {accepted:records.length,inserted};}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
   },
