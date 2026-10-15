@@ -1,13 +1,13 @@
 {
   "id": "storage",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Unified replaceable storage transport",
   "metadata": {
     "storageContract": "1.0.0",
     "ui": {
       "id": "dev.delta.db",
       "name": "Delta Storage",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "contract": "^1.4.0",
       "publisher": "Delta",
       "description": "Unified storage with local files or PostgreSQL + TimescaleDB.",
