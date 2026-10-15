@@ -34,7 +34,49 @@
           "description": "Unified storage with local files or PostgreSQL + TimescaleDB.",
           "icon": "database",
           "category": "system",
-          "metrics": []
+          "metrics": [],
+          "permissions": [
+            {
+              "scope": "register:storage",
+              "reason": "Required runtime authority. This is executable plugin code, not a sandbox.",
+              "optional": false
+            },
+            {
+              "scope": "call:storage.*",
+              "reason": "Required runtime authority. This is executable plugin code, not a sandbox.",
+              "optional": false
+            }
+          ],
+          "settings": [
+            {
+              "key": "engine",
+              "type": "select",
+              "label": "Storage engine",
+              "default": "file",
+              "options": [
+                {
+                  "value": "file",
+                  "label": "Local files (quick start)"
+                },
+                {
+                  "value": "postgres",
+                  "label": "PostgreSQL + TimescaleDB"
+                }
+              ]
+            },
+            {
+              "key": "databaseUrl",
+              "type": "secret",
+              "label": "PostgreSQL connection URL",
+              "help": "Stored privately on this node. Leave blank to retain the current connection."
+            },
+            {
+              "key": "confirmBackendChange",
+              "type": "boolean",
+              "label": "I understand that switching engines does not migrate existing data",
+              "default": false
+            }
+          ]
         },
         "ru": {
           "name": "Delta Storage",
@@ -42,9 +84,88 @@
           "description": "Единое хранилище: локальные файлы или PostgreSQL + TimescaleDB.",
           "icon": "database",
           "category": "system",
-          "metrics": []
+          "metrics": [],
+          "permissions": [
+            {
+              "scope": "register:storage",
+              "reason": "Необходимые права процесса. Плагин исполняет код на узле без песочницы.",
+              "optional": false
+            },
+            {
+              "scope": "call:storage.*",
+              "reason": "Необходимые права процесса. Плагин исполняет код на узле без песочницы.",
+              "optional": false
+            }
+          ],
+          "settings": [
+            {
+              "key": "engine",
+              "label": "Движок хранения",
+              "options": [
+                {
+                  "value": "file",
+                  "label": "Локальные файлы"
+                },
+                {
+                  "value": "postgres",
+                  "label": "PostgreSQL + TimescaleDB"
+                }
+              ]
+            },
+            {
+              "key": "databaseUrl",
+              "label": "Строка подключения PostgreSQL",
+              "help": "Хранится приватно на узле. Оставьте пустым, чтобы сохранить текущее подключение."
+            },
+            {
+              "key": "confirmBackendChange",
+              "label": "Я понимаю, что смена движка не переносит существующие данные"
+            }
+          ]
         }
-      }
+      },
+      "permissions": [
+        {
+          "scope": "register:storage",
+          "reason": "Required runtime authority. This is executable plugin code, not a sandbox.",
+          "optional": false
+        },
+        {
+          "scope": "call:storage.*",
+          "reason": "Required runtime authority. This is executable plugin code, not a sandbox.",
+          "optional": false
+        }
+      ],
+      "settings": [
+        {
+          "key": "engine",
+          "type": "select",
+          "label": "Storage engine",
+          "default": "file",
+          "options": [
+            {
+              "value": "file",
+              "label": "Local files (quick start)"
+            },
+            {
+              "value": "postgres",
+              "label": "PostgreSQL + TimescaleDB"
+            }
+          ]
+        },
+        {
+          "key": "databaseUrl",
+          "type": "secret",
+          "label": "PostgreSQL connection URL",
+          "help": "Stored privately on this node. Leave blank to retain the current connection."
+        },
+        {
+          "key": "confirmBackendChange",
+          "type": "boolean",
+          "label": "I understand that switching engines does not migrate existing data",
+          "default": false
+        }
+      ]
     }
   },
   "capabilities": [
@@ -75,6 +196,16 @@
     {
       "name": "health",
       "params": {}
+    },
+    {
+      "name": "settings",
+      "params": {
+        "values": {
+          "type": "object",
+          "required": true
+        }
+      },
+      "admin": true
     }
   ]
 }
