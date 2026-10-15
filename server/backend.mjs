@@ -45,6 +45,7 @@ export class BackendManager {
   if(next.engine==='postgres'&&next.databaseUrl&&!/^postgres(ql)?:\/\//.test(next.databaseUrl))fail('bad_request','url');
   const changed=next.engine!==this.config.engine||next.databaseUrl!==this.config.databaseUrl;
   if(changed&&this.backend&&values.confirmBackendChange!==true)fail('bad_request','confirm');
+  if(!changed&&this.backend){this.requested=this.config;this.retryMigration=false;this.job={state:'ready'};return this.publicSettings()}
   return {...this.publicSettings(),...this.start(next,{migrate:changed&&!!this.backend})};
  }
  publicSettings(){return {engine:this.config.engine,databaseUrl:!!this.config.databaseUrl,useManagedPostgres:!this.config.databaseUrl}}
