@@ -93,3 +93,8 @@ Switching file ↔ PostgreSQL (including an external PostgreSQL URL) runs an asy
 Setup registers the Storage component immediately rather than waiting for a large image download. Setup/migration state and errors are available through `storage.status` and plugin-owned web notices. A failed job can be retried with **Retry database setup**. External URLs are optional and kept private; turn automatic management off only when using your own server.
 
 Validation includes real plain PostgreSQL round trips, failure rollback and owner/Unicode preservation, an actual pinned Timescale container lifecycle and both-direction migration in Linux CI, Windows unit/ACL checks, and live core/Web dashboard migration checks. Native Linux desktop polkit prompts and Docker Desktop/WSL installation require testing on those actual desktops; container CI is not a substitute for that.
+
+## Web and native clients
+
+This is an independent Core plugin, not code embedded in a particular frontend. Compatible Web/Desktop clients discover its manifest and API through the node. A phone can manage a trusted paired desktop/VPS node; it does not run local npm plugins or desktop input collectors. Choose the service/source node explicitly and review the permissions before installation. Missing capabilities remain unavailable rather than being simulated.
+
