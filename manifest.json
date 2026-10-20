@@ -6,7 +6,7 @@
     "ui": {
       "id": "dev.delta.db",
       "name": "Delta Storage",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "contract": "^1.4.0",
       "publisher": "Delta",
       "description": "Unified storage with local files or PostgreSQL (TimescaleDB optional).",
@@ -386,5 +386,5 @@
       "admin": true
     }
   ],
-  "version": "0.4.1"
+  "version": "0.4.2"
 }

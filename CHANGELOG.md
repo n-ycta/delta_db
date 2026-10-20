@@ -11,11 +11,12 @@
 
 - No pending changes.
 
-## [v0.4.1]
+## [v0.4.2]
 
 - Start fresh personal installations with durable file Storage, not an unavailable container prerequisite.
 - Preserve explicit/existing managed PostgreSQL selections; never replace them with empty files.
 - Retry transient PostgreSQL/runtime outages automatically; retain data and existing backend during failures.
+- Select managed PostgreSQL explicitly in its real-container test.
 - Verify file restart persistence and outage recovery with regression tests.
 
 ## [v0.4.0]
