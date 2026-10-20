@@ -4,8 +4,8 @@ import {readFile,writeFile,mkdir,rename,access} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {storageHandlers} from './storage.mjs';import {fileHandlers} from './file.mjs';import {copyVerified} from './migration.mjs';import {ManagedPostgres} from './managed-postgres.mjs';import {DeltaError} from './delta-sdk.mjs';import {message} from './messages.mjs';
 export class BackendManager {
- constructor(dir,id,{managed=new ManagedPostgres(dir),openBackend}={}){this.dir=dir;this.id=id;this.managed=managed;this.openBackend=openBackend||this.open.bind(this);this.configFile=resolve(dir,'backend.json');this.backend=null;this.job={state:'starting'};this.active=0;this.changing=false;this.pending=null;}
- async init(){await privateDirectory(this.dir);try{this.config=JSON.parse(await readFile(this.configFile,'utf8'))}catch(e){if(e.code!=='ENOENT')throw e;let existing=false;try{await access(resolve(this.dir,'storage.json'));existing=true}catch{}this.config={engine:process.env.DATABASE_URL?'postgres':existing?'file':'postgres',databaseUrl:process.env.DATABASE_URL||''}}return this}
+ constructor(dir,id,{managed=new ManagedPostgres(dir),openBackend,retryMs=5000}={}){this.dir=dir;this.id=id;this.retryMs=retryMs;this.closed=false;this.managed=managed;this.openBackend=openBackend||this.open.bind(this);this.configFile=resolve(dir,'backend.json');this.backend=null;this.job={state:'starting'};this.active=0;this.changing=false;this.pending=null;}
+ async init(){await privateDirectory(this.dir);try{this.config=JSON.parse(await readFile(this.configFile,'utf8'))}catch(e){if(e.code!=='ENOENT')throw e;let managed=false;try{await access(resolve(this.dir,'postgres','credentials.json'));managed=true}catch{}this.config={engine:process.env.DATABASE_URL||managed?'postgres':'file',databaseUrl:process.env.DATABASE_URL||''}}return this}
  async open(config){
   if(config.engine==='file'){const file=resolve(this.dir,'storage.json');return {engine:'file',file,handlers:await fileHandlers(file,this.id),close:async()=>{}}}
   if(config.engine!=='postgres')throw Object.assign(Error('engine'),{code:'engine'});
@@ -24,7 +24,7 @@ export class BackendManager {
  }
  error(e){return ['container_engine_required','file_capacity','url','engine','connection'].includes(e?.code)?e.code:'failed'}
  start(next=this.requested||this.config,{migrate=false}={}){
-  if(this.pending)throw new DeltaError('conflict',message('busy'));
+  clearTimeout(this.retryTimer);if(this.pending)throw new DeltaError('conflict',message('busy'));
   this.requested=next;this.retryMigration=migrate||this.retryMigration;this.job={state:migrate?'migration':'setup',startedAt:Date.now()};
   this.pending=(async()=>{let candidate;try{
    candidate=await this.openBackend(next);this.changing=true;while(this.active)await new Promise(r=>setTimeout(r,10));
@@ -33,7 +33,7 @@ export class BackendManager {
    await writeFile(this.configFile+'.tmp',JSON.stringify(next),{mode:0o600});await rename(this.configFile+'.tmp',this.configFile);
    const old=this.backend;this.backend=candidate;candidate=null;this.config=next;this.retryMigration=false;this.job={state:'ready',completedAt:Date.now(),...(migration?{migration}:{})};
    await old?.close().catch(()=>{});
-  }catch(e){await candidate?.close().catch(()=>{});this.job={state:'error',error:this.error(e),completedAt:Date.now()};}finally{this.changing=false;this.pending=null}})();
+  }catch(e){await candidate?.close().catch(()=>{});this.job={state:'error',error:this.error(e),completedAt:Date.now()};if(!this.closed&&['connection','container_engine_required'].includes(this.job.error)){this.retryTimer=setTimeout(()=>{if(!this.closed&&!this.pending)this.start()},this.retryMs);this.retryTimer.unref();}}finally{this.changing=false;this.pending=null}})();
   return {accepted:true,job:{...this.job},engine:this.config.engine};
  }
  async call(cap,args,caller){if(!this.backend||this.changing)throw new DeltaError('unavailable',message('unavailable',args?._locale));this.active++;try{return await this.backend.handlers[this.id+'.'+cap](args,caller)}finally{this.active--}}
@@ -51,5 +51,5 @@ export class BackendManager {
  }
  publicSettings(){return {engine:this.config.engine,databaseUrl:!!this.config.databaseUrl,useManagedPostgres:!this.config.databaseUrl}}
  status(){const state=this.job.state;const key=state==='error'?this.job.error:state;return {settings:this.publicSettings(),job:this.job,ready:!!this.backend&&!this.changing,notices:state==='ready'?[]:[{id:'storage.backend',severity:state==='error'?'warn':'info',message:message(key),localizations:{ru:message(key,'ru')},...(state==='error'?{actionId:this.job.error==='container_engine_required'?'prepare_runtime':'retry_backend'}:{})}]}}
- async close(){await this.pending;await this.backend?.close()}
+ async close(){this.closed=true;clearTimeout(this.retryTimer);await this.pending;await this.backend?.close()}
 }

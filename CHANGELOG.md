@@ -9,7 +9,14 @@
 
 ## [Unreleased]
 
-- Improve release documentation and changelog-backed release publishing; no new runtime release is created for this maintenance change.
+- No pending changes.
+
+## [v0.4.1]
+
+- Start fresh personal installations with durable file Storage, not an unavailable container prerequisite.
+- Preserve explicit/existing managed PostgreSQL selections; never replace them with empty files.
+- Retry transient PostgreSQL/runtime outages automatically; retain data and existing backend during failures.
+- Verify file restart persistence and outage recovery with regression tests.
 
 ## [v0.4.0]
 

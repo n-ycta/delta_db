@@ -28,7 +28,7 @@ Default when no PostgreSQL configuration exists. Atomic private JSON writes, ser
 
 Provide a standard PostgreSQL 15+ server. No TimescaleDB extension or superuser role is required. The plugin applies idempotent tables/indexes from `migrations/001_storage.sql`; existing Timescale hypertables remain compatible. Documents are isolated by the authenticated caller.
 
-In the web console open **Plugins → Delta Storage → Settings**, choose PostgreSQL and supply a connection URL. Confirm the warning: changing backends **does not migrate data**. The candidate connection/migration must succeed before the active backend changes. The URL is written only to the node's private storage directory and is not returned in settings responses. `DATABASE_URL` is also supported for initial deployment.
+In the web console open **Plugins → Delta Storage → Settings**, choose PostgreSQL and supply a connection URL. Confirm the verified migration: changing backends copies and verifies records and owner-isolated documents, retaining a backup. The candidate connection/migration must succeed before the active backend changes. The URL is written only to the node's private storage directory and is not returned in settings responses. `DATABASE_URL` is also supported for initial deployment.
 
 For a local development server with Docker:
 
@@ -37,7 +37,7 @@ docker compose up -d
 # Inspect compose.yaml and set your own database password before remote use.
 ```
 
-Use a least-privilege database role with the schema/migration permissions it needs. Enable TLS for remote database connections and do not expose PostgreSQL publicly without proper network controls. Switching to a different plugin/database is possible by implementing the same capabilities; automatic cross-engine migration/replication is not included.
+Use a least-privilege database role with the schema/migration permissions it needs. Enable TLS for remote database connections and do not expose PostgreSQL publicly without proper network controls. Switching to a different plugin/database is possible by implementing the same capabilities; verified migration between the built-in file/PostgreSQL backends is supported; automatic replication is not included.
 
 ## Contract
 
@@ -98,3 +98,5 @@ Validation includes real plain PostgreSQL round trips, failure rollback and owne
 
 This is an independent Core plugin, not code embedded in a particular frontend. Compatible Web/Desktop clients discover its manifest and API through the node. A phone can manage a trusted paired desktop/VPS node; it does not run local npm plugins or desktop input collectors. Choose the service/source node explicitly and review the permissions before installation. Missing capabilities remain unavailable rather than being simulated.
 
+
+Fresh installations start with files. Explicit PostgreSQL settings or existing managed credentials are preserved. Temporary connection/runtime errors retry automatically; no silent fallback to empty files.
